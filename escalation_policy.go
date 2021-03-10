@@ -26,7 +26,7 @@ type EscalationPolicy struct {
 	EscalationRules []EscalationRule `json:"escalation_rules,omitempty"`
 	Services        []APIObject      `json:"services,omitempty"`
 	NumLoops        uint             `json:"num_loops,omitempty"`
-	Teams           []APIReference   `json:"teams"`
+	Teams           []APIReference   `json:"teams,omitempty"`
 	Description     string           `json:"description,omitempty"`
 	RepeatEnabled   bool             `json:"repeat_enabled,omitempty"`
 }

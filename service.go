@@ -3,9 +3,11 @@ package pagerduty
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/google/go-querystring/query"
+	log "github.com/sirupsen/logrus"
 )
 
 // Integration is an endpoint (like Nagios, email, or an API call) that generates events, which are normalized and de-duplicated by PagerDuty to create incidents.
@@ -92,8 +94,8 @@ type Service struct {
 	APIObject
 	Name                    string                   `json:"name,omitempty"`
 	Description             string                   `json:"description,omitempty"`
-	AutoResolveTimeout      *uint                    `json:"auto_resolve_timeout"`
-	AcknowledgementTimeout  *uint                    `json:"acknowledgement_timeout"`
+	AutoResolveTimeout      *uint                    `json:"auto_resolve_timeout,omitempty"`
+	AcknowledgementTimeout  *uint                    `json:"acknowledgement_timeout,omitempty"`
 	CreateAt                string                   `json:"created_at,omitempty"`
 	Status                  string                   `json:"status,omitempty"`
 	LastIncidentTimestamp   string                   `json:"last_incident_timestamp,omitempty"`
@@ -101,8 +103,8 @@ type Service struct {
 	EscalationPolicy        EscalationPolicy         `json:"escalation_policy,omitempty"`
 	Teams                   []Team                   `json:"teams,omitempty"`
 	IncidentUrgencyRule     *IncidentUrgencyRule     `json:"incident_urgency_rule,omitempty"`
-	SupportHours            *SupportHours            `json:"support_hours"`
-	ScheduledActions        []ScheduledAction        `json:"scheduled_actions"`
+	SupportHours            *SupportHours            `json:"support_hours,omitempty"`
+	ScheduledActions        []ScheduledAction        `json:"scheduled_actions,omitempty"`
 	AlertCreation           string                   `json:"alert_creation,omitempty"`
 	AlertGrouping           string                   `json:"alert_grouping,omitempty"`
 	AlertGroupingTimeout    *uint                    `json:"alert_grouping_timeout,omitempty"`
@@ -331,6 +333,8 @@ func getServiceRuleFromResponse(c *Client, resp *http.Response, err error) (*Ser
 
 func getServiceFromResponse(c *Client, resp *http.Response, err error) (*Service, error) {
 	if err != nil {
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.WithFields(log.Fields{"status": resp.Status, "body": body, "error": err}).Info("Error on the service request")
 		return nil, err
 	}
 	var target map[string]Service
